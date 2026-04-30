@@ -1,101 +1,182 @@
-import Image from "next/image";
+import Link from "next/link";
+import MetricCard from "@/components/MetricCard";
+import RankRing from "@/components/RankRing";
+import SectionTitle from "@/components/SectionTitle";
+import SportBadge from "@/components/SportBadge";
+import Icon from "@/components/Icon";
+import {
+  FUEL_PERFORMANCE,
+  MOCK_USER,
+  RECENT_ACTIVITIES,
+} from "@/lib/mockData";
+import { SPORT_ACCENT, SPORT_ICON, TIER_THRESHOLDS, nextTier } from "@/lib/tiers";
 
-export default function Home() {
+export default function HomePage() {
+  const tier = MOCK_USER.bodybuildingTier;
+  const next = nextTier(tier);
+  const ringProgress = next
+    ? (MOCK_USER.rankScore - TIER_THRESHOLDS[tier]) /
+      (TIER_THRESHOLDS[next] - TIER_THRESHOLDS[tier])
+    : 1;
+
+  const sportPills: { sport: keyof typeof SPORT_ACCENT; value: string }[] = [
+    { sport: "bodybuilding", value: `${MOCK_USER.bests.bodybuildingTotalKg} kg total` },
+    { sport: "swimming", value: MOCK_USER.bests.swim100mFreestyle },
+    { sport: "running", value: MOCK_USER.bests.run5km },
+  ];
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="flex flex-col gap-6 pt-6">
+      {/* HERO — primary sport rank */}
+      <section className="flex flex-col items-center gap-4 animate-fade-up">
+        <RankRing tier={tier} progress={ringProgress} size={120} />
+        <div className="text-center">
+          <p className="text-[12px] uppercase tracking-widest text-ink-muted font-medium">
+            Bodybuilding Rank
+          </p>
+          <h1 className="font-display font-extrabold text-display-xl text-ink leading-none mt-1 tracking-tight">
+            {tier}
+          </h1>
+          <p className="text-ink-muted text-sm mt-2">
+            Score {MOCK_USER.rankScore}
+            {next && ` · ${Math.round(ringProgress * 100)}% to ${next}`}
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        <div className="flex w-full gap-2">
+          {sportPills.map((pill) => {
+            const accent = SPORT_ACCENT[pill.sport];
+            return (
+              <div
+                key={pill.sport}
+                className={`flex-1 bg-surface border border-white/10 rounded-xl px-3 py-2.5 flex flex-col items-center gap-0.5`}
+              >
+                <Icon
+                  name={SPORT_ICON[pill.sport]}
+                  className={accent.text}
+                  size={18}
+                />
+                <span className="font-mono text-[13px] font-semibold text-ink whitespace-nowrap">
+                  {pill.value}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* BENTO METRICS */}
+      <section className="grid grid-cols-2 gap-3">
+        <MetricCard
+          label="Calories Today"
+          value={MOCK_USER.todayCalories.toLocaleString()}
+          progress={MOCK_USER.todayCalories / MOCK_USER.todayCalorieTarget}
+          hint={`of ${MOCK_USER.todayCalorieTarget.toLocaleString()} kcal`}
+        />
+        <MetricCard
+          label="Protein"
+          value={`${MOCK_USER.proteinG} g`}
+          progress={MOCK_USER.proteinG / MOCK_USER.proteinGTarget}
+          hint={`of ${MOCK_USER.proteinGTarget} g`}
+        />
+        <MetricCard
+          label="Weekly Workouts"
+          value={MOCK_USER.workoutsThisWeek}
+          progress={MOCK_USER.workoutsThisWeek / 6}
+          hint="of 6 sessions"
+        />
+        <MetricCard
+          label="Active Streak"
+          value={`${MOCK_USER.streakDays}d`}
+          progress={Math.min(MOCK_USER.streakDays / 30, 1)}
+          hint="last 30 days"
+        />
+      </section>
+
+      {/* FUEL → PERFORMANCE — unique signature card */}
+      <section>
+        <SectionTitle
+          action={
+            <Link
+              href="/coach"
+              className="text-electric text-xs font-display font-semibold uppercase tracking-widest"
+            >
+              Ask Coach
+            </Link>
+          }
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Fuel → Performance
+        </SectionTitle>
+        <div className="mt-3 bg-surface rounded-2xl border border-white/10 shadow-2xl border-l-4 border-l-electric overflow-hidden">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center p-5 gap-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-ink-muted font-medium">
+                Yesterday — Fuel
+              </p>
+              <ul className="mt-2 space-y-1 font-mono text-sm">
+                <li>{FUEL_PERFORMANCE.yesterday.proteinG} g protein</li>
+                <li>{FUEL_PERFORMANCE.yesterday.calories} kcal</li>
+                <li>{FUEL_PERFORMANCE.yesterday.carbsG} g carbs</li>
+              </ul>
+            </div>
+            <div className="text-electric grid place-items-center">
+              <Icon name="trending_flat" size={28} />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-ink-muted font-medium">
+                Today — Performance
+              </p>
+              <ul className="mt-2 space-y-1 font-mono text-sm">
+                <li className="text-electric font-semibold">{FUEL_PERFORMANCE.today.pr}</li>
+                <li>Volume +{FUEL_PERFORMANCE.today.volumeChangePct}%</li>
+                <li>
+                  {FUEL_PERFORMANCE.today.timeDeltaSec < 0 ? "−" : "+"}
+                  {Math.abs(FUEL_PERFORMANCE.today.timeDeltaSec).toFixed(1)}s avg
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="bg-navy/60 border-t border-white/5 px-5 py-3">
+            <p className="text-xs text-ink-muted">
+              <span className="text-electric font-semibold">Insight ·</span>{" "}
+              {FUEL_PERFORMANCE.insight}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* RECENT ACTIVITY */}
+      <section>
+        <SectionTitle>Recent Activity</SectionTitle>
+        <ul className="mt-3 flex flex-col gap-2">
+          {RECENT_ACTIVITIES.map((a) => {
+            const accent = SPORT_ACCENT[a.sport];
+            return (
+              <li
+                key={a.id}
+                className={`bg-surface rounded-2xl border border-white/10 shadow-2xl p-4 flex items-center gap-3 border-l-4`}
+                style={{ borderLeftColor: accent.hex }}
+              >
+                <div
+                  className={`w-10 h-10 rounded-full grid place-items-center ${accent.bg} ${accent.text}`}
+                >
+                  <Icon name={SPORT_ICON[a.sport]} size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-display font-semibold text-sm text-ink truncate">
+                    {a.title}
+                  </p>
+                  <p className="font-mono text-xs text-ink-muted">{a.value}</p>
+                </div>
+                <SportBadge sport={a.sport} showLabel={false} className="!px-2" />
+                <span className="text-[10px] uppercase tracking-widest text-ink-muted font-medium whitespace-nowrap">
+                  {a.ago}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
     </div>
   );
 }

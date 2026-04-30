@@ -1,0 +1,24 @@
+{
+  "name": "DASH — The OS of a Serious Athlete",
+  "short_name": "DASH",
+  "description": "Rank your strength, speed, and endurance. Compete. Verify. Progress.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#001226",
+  "theme_color": "#001226",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

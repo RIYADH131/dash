@@ -34,3 +34,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Capacitor native shells (generated locally per signing cert holder)
+ios/
+android/
+
+# Static export output
+/out/
