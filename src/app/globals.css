@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #001226;
+  color: #e1e3e4;
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Material Symbols base styling — variable font axes */
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+  font-size: 24px;
+  line-height: 1;
+  user-select: none;
+  -webkit-font-feature-settings: "liga";
+  font-feature-settings: "liga";
+}
+
+.material-symbols-outlined.filled {
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 500,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+/* Hide scrollbar utility for chip rows */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Subtle focus ring — uses electric blue, no glow */
+:focus-visible {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Reduced motion — respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Tier badge color helpers (tailwind can't compose arbitrary tier names dynamically without safelist) */
+.tier-bronze {
+  background-color: rgb(124 45 18 / 0.3);
+  color: #fb923c;
+}
+.tier-silver {
+  background-color: rgb(71 85 105 / 0.3);
+  color: #cbd5e1;
+}
+.tier-gold {
+  background-color: rgb(113 63 18 / 0.3);
+  color: #facc15;
+}
+.tier-platinum {
+  background-color: rgb(19 78 74 / 0.3);
+  color: #5eead4;
+}
+.tier-diamond {
+  background-color: rgb(88 28 135 / 0.3);
+  color: #c084fc;
+}
+.tier-titan {
+  background-color: rgb(30 58 138 / 0.3);
+  color: #60a5fa;
+}
+.tier-champion {
+  background-color: rgb(127 29 29 / 0.3);
+  color: #f87171;
+}
