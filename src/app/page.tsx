@@ -98,7 +98,7 @@ export default function HomePage() {
         <SectionTitle
           action={
             <Link
-              href="/coach"
+              href="/coach.html"
               className="text-electric text-xs font-display font-semibold uppercase tracking-widest"
             >
               Ask Coach

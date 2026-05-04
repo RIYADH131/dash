@@ -191,7 +191,7 @@ export default function ProfilePage() {
         <SectionTitle
           action={
             <Link
-              href="/calculator"
+              href="/calculator.html"
               className="text-electric text-xs font-display font-semibold uppercase tracking-widest"
             >
               Add
@@ -207,7 +207,7 @@ export default function ProfilePage() {
             </div>
           ) : exerciseRanks.length === 0 ? (
             <Link
-              href="/calculator"
+              href="/calculator.html"
               className="bg-surface rounded-2xl border border-white/10 px-4 py-5 flex items-center gap-3 active:scale-[0.99] transition-all duration-200"
             >
               <div className="w-10 h-10 rounded-full bg-electric/10 grid place-items-center text-electric shrink-0">
