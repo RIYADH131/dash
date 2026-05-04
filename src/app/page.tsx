@@ -1,4 +1,6 @@
 import Link from "next/link";
+import LiveMacroTiles from "@/components/LiveMacroTiles";
+import LiveYesterdayFuel from "@/components/LiveYesterdayFuel";
 import MetricCard from "@/components/MetricCard";
 import RankRing from "@/components/RankRing";
 import SectionTitle from "@/components/SectionTitle";
@@ -67,17 +69,11 @@ export default function HomePage() {
 
       {/* BENTO METRICS */}
       <section className="grid grid-cols-2 gap-3">
-        <MetricCard
-          label="Calories Today"
-          value={MOCK_USER.todayCalories.toLocaleString()}
-          progress={MOCK_USER.todayCalories / MOCK_USER.todayCalorieTarget}
-          hint={`of ${MOCK_USER.todayCalorieTarget.toLocaleString()} kcal`}
-        />
-        <MetricCard
-          label="Protein"
-          value={`${MOCK_USER.proteinG} g`}
-          progress={MOCK_USER.proteinG / MOCK_USER.proteinGTarget}
-          hint={`of ${MOCK_USER.proteinGTarget} g`}
+        <LiveMacroTiles
+          fallbackCal={MOCK_USER.todayCalories}
+          fallbackCalTarget={MOCK_USER.todayCalorieTarget}
+          fallbackProtein={MOCK_USER.proteinG}
+          fallbackProteinTarget={MOCK_USER.proteinGTarget}
         />
         <MetricCard
           label="Weekly Workouts"
@@ -113,11 +109,11 @@ export default function HomePage() {
               <p className="text-[10px] uppercase tracking-widest text-ink-muted font-medium">
                 Yesterday — Fuel
               </p>
-              <ul className="mt-2 space-y-1 font-mono text-sm">
-                <li>{FUEL_PERFORMANCE.yesterday.proteinG} g protein</li>
-                <li>{FUEL_PERFORMANCE.yesterday.calories} kcal</li>
-                <li>{FUEL_PERFORMANCE.yesterday.carbsG} g carbs</li>
-              </ul>
+              <LiveYesterdayFuel
+                fallbackProtein={FUEL_PERFORMANCE.yesterday.proteinG}
+                fallbackCalories={FUEL_PERFORMANCE.yesterday.calories}
+                fallbackCarbs={FUEL_PERFORMANCE.yesterday.carbsG}
+              />
             </div>
             <div className="text-electric grid place-items-center">
               <Icon name="trending_flat" size={28} />

@@ -12,6 +12,7 @@ const TABS: {
 }[] = [
   { href: "/", routeBase: "/", icon: "home", label: "Home" },
   { href: "/leaderboard.html", routeBase: "/leaderboard", icon: "leaderboard", label: "Leaderboard" },
+  { href: "/macros.html", routeBase: "/macros", icon: "restaurant", label: "Macros" },
   { href: "/challenge.html", routeBase: "/challenge", icon: "bolt", label: "Drops" },
   { href: "/calculator.html", routeBase: "/calculator", icon: "calculate", label: "Rank" },
   { href: "/coach.html", routeBase: "/coach", icon: "psychology", label: "Coach" },
