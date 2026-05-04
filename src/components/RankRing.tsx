@@ -1,7 +1,6 @@
 import clsx from "clsx";
 import type { Tier } from "@/lib/types";
-import Icon from "./Icon";
-import { TIER_ICON } from "@/lib/tiers";
+import TierEmblem from "./TierEmblem";
 
 interface Props {
   tier: Tier;
@@ -32,6 +31,7 @@ export default function RankRing({
   const c = 2 * Math.PI * r;
   const dash = c * Math.max(0, Math.min(1, progress));
   const color = TIER_STROKE[tier];
+  const emblemSize = Math.round(size * 0.66);
   return (
     <div
       className={clsx("relative grid place-items-center", className)}
@@ -64,16 +64,7 @@ export default function RankRing({
           style={{ transition: "stroke-dasharray 600ms ease-out" }}
         />
       </svg>
-      <div
-        className="rounded-full bg-navy border border-white/10 grid place-items-center"
-        style={{
-          width: size - stroke * 3,
-          height: size - stroke * 3,
-          color,
-        }}
-      >
-        <Icon name={TIER_ICON[tier]} filled size={Math.round(size * 0.42)} />
-      </div>
+      <TierEmblem tier={tier} size={emblemSize} />
     </div>
   );
 }

@@ -1,11 +1,12 @@
 import type {
+  ExerciseId,
   RankResult,
   RunDistance,
   Stroke,
   SwimDistance,
   Tier,
 } from "./types";
-import { TIER_THRESHOLDS, nextTier, tierFromScore } from "./tiers";
+import { TIER_THRESHOLDS, TIERS, nextTier, tierFromScore } from "./tiers";
 
 /* -------------------------------------------------------------------------- */
 /* Bodybuilding — bodyweight-adjusted total (Wilks-flavored, simplified)      */
@@ -149,6 +150,170 @@ function packResult(
     context,
     toNext: toNextFn(tier),
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Exercise rank — single-lift, max weight × max reps                         */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Strength standards expressed as estimated 1RM ÷ bodyweight.
+ * Sourced from widely cited intermediate→world-class powerlifting tables
+ * (e.g. strengthlevel.com, ExRx). One row per supported lift, one column
+ * per tier. Used to map a single-exercise PR into the DASH 7-tier system.
+ */
+export const EXERCISE_STANDARDS: Record<ExerciseId, Record<Tier, number>> = {
+  bench: {
+    Bronze: 0.5,
+    Silver: 0.75,
+    Gold: 1.0,
+    Platinum: 1.25,
+    Diamond: 1.5,
+    Titan: 1.75,
+    Champion: 2.1,
+  },
+  squat: {
+    Bronze: 0.75,
+    Silver: 1.0,
+    Gold: 1.5,
+    Platinum: 1.85,
+    Diamond: 2.15,
+    Titan: 2.5,
+    Champion: 2.85,
+  },
+  deadlift: {
+    Bronze: 1.0,
+    Silver: 1.4,
+    Gold: 1.85,
+    Platinum: 2.2,
+    Diamond: 2.55,
+    Titan: 2.85,
+    Champion: 3.2,
+  },
+  ohp: {
+    Bronze: 0.35,
+    Silver: 0.55,
+    Gold: 0.75,
+    Platinum: 0.95,
+    Diamond: 1.15,
+    Titan: 1.35,
+    Champion: 1.55,
+  },
+  row: {
+    Bronze: 0.5,
+    Silver: 0.75,
+    Gold: 1.0,
+    Platinum: 1.2,
+    Diamond: 1.4,
+    Titan: 1.6,
+    Champion: 1.85,
+  },
+  front_squat: {
+    Bronze: 0.6,
+    Silver: 0.85,
+    Gold: 1.2,
+    Platinum: 1.5,
+    Diamond: 1.75,
+    Titan: 2.05,
+    Champion: 2.35,
+  },
+  rdl: {
+    Bronze: 0.75,
+    Silver: 1.1,
+    Gold: 1.5,
+    Platinum: 1.85,
+    Diamond: 2.15,
+    Titan: 2.45,
+    Champion: 2.75,
+  },
+  weighted_pullup: {
+    // ratio of (added load) / bodyweight at 1 rep
+    Bronze: 0,
+    Silver: 0.1,
+    Gold: 0.25,
+    Platinum: 0.45,
+    Diamond: 0.65,
+    Titan: 0.85,
+    Champion: 1.05,
+  },
+};
+
+export const EXERCISE_LABEL: Record<ExerciseId, string> = {
+  bench: "Bench Press",
+  squat: "Back Squat",
+  deadlift: "Deadlift",
+  ohp: "Overhead Press",
+  row: "Barbell Row",
+  front_squat: "Front Squat",
+  rdl: "Romanian Deadlift",
+  weighted_pullup: "Weighted Pull-up",
+};
+
+/** Epley estimated 1RM: 1RM = w × (1 + reps/30). Reps clamped to [1, 12]. */
+export function estimateOneRepMax(weightKg: number, reps: number): number {
+  const r = Math.max(1, Math.min(12, reps));
+  if (r === 1) return weightKg;
+  return weightKg * (1 + r / 30);
+}
+
+/**
+ * Rank a single-exercise effort using estimated 1RM relative to bodyweight,
+ * mapped against per-lift strength standards.
+ */
+export function exerciseScore(opts: {
+  exercise: ExerciseId;
+  weightKg: number;
+  reps: number;
+  bodyweightKg: number;
+}): RankResult & { oneRepMax: number; ratio: number } {
+  const oneRm = estimateOneRepMax(opts.weightKg, opts.reps);
+  const bw = Math.max(opts.bodyweightKg, 40);
+  const ratio = oneRm / bw;
+  const standards = EXERCISE_STANDARDS[opts.exercise];
+
+  // map ratio to a 0..1000 score by interpolating between tier thresholds
+  let score: number;
+  if (ratio <= standards.Bronze) {
+    // sub-Bronze: scale 0..200 by how close to Bronze
+    score = Math.max(0, (ratio / Math.max(standards.Bronze, 0.01)) * TIER_THRESHOLDS.Silver);
+  } else if (ratio >= standards.Champion) {
+    score = 1000;
+  } else {
+    // find bracket
+    let lower: Tier = "Bronze";
+    let upper: Tier = "Champion";
+    for (let i = 0; i < TIERS.length - 1; i++) {
+      const a = TIERS[i];
+      const b = TIERS[i + 1];
+      if (ratio >= standards[a] && ratio < standards[b]) {
+        lower = a;
+        upper = b;
+        break;
+      }
+    }
+    const span = standards[upper] - standards[lower];
+    const frac = span > 0 ? (ratio - standards[lower]) / span : 0;
+    const lo = TIER_THRESHOLDS[lower];
+    const hi =
+      upper === "Champion" ? 1000 : TIER_THRESHOLDS[upper];
+    score = lo + (hi - lo) * frac;
+  }
+  score = Math.max(0, Math.min(1000, score));
+
+  const result = packResult(score, (tier) => {
+    const next = nextTier(tier);
+    if (!next) return null;
+    const targetRatio = standards[next];
+    const targetOneRm = targetRatio * bw;
+    // back-solve weight needed at the user's rep count to hit that 1RM
+    const r = Math.max(1, Math.min(12, opts.reps));
+    const targetWeight =
+      r === 1 ? targetOneRm : targetOneRm / (1 + r / 30);
+    const delta = Math.max(2.5, Math.round((targetWeight - opts.weightKg) / 2.5) * 2.5);
+    return `+${delta} kg @ ${r} reps to reach ${next}`;
+  });
+
+  return { ...result, oneRepMax: oneRm, ratio };
 }
 
 /* -------------------------------------------------------------------------- */

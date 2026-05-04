@@ -11,6 +11,16 @@ export type Tier =
 
 export type Stroke = "freestyle" | "backstroke" | "breaststroke" | "butterfly";
 
+export type ExerciseId =
+  | "bench"
+  | "squat"
+  | "deadlift"
+  | "ohp"
+  | "row"
+  | "front_squat"
+  | "rdl"
+  | "weighted_pullup";
+
 export type SwimDistance = 50 | 100 | 200 | 400;
 export type RunDistance = 1 | 5 | 10 | 21 | 42;
 
