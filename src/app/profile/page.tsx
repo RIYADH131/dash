@@ -8,6 +8,7 @@ import ProgressBar from "@/components/ProgressBar";
 import SectionTitle from "@/components/SectionTitle";
 import SportBadge from "@/components/SportBadge";
 import TierBadge from "@/components/TierBadge";
+import TierEmblem from "@/components/TierEmblem";
 import { MOCK_USER, PROGRAMS } from "@/lib/mockData";
 import {
   SPORT_ACCENT,
@@ -78,11 +79,12 @@ export default function ProfilePage() {
           {SPORT_BREAKDOWN.map((b) => (
             <span
               key={b.sport}
-              className="inline-flex items-center gap-1.5 bg-surface border border-white/10 rounded-full px-3 py-1.5"
+              className="inline-flex items-center gap-1.5 bg-surface border border-white/10 rounded-full pl-1 pr-3 py-1"
             >
+              <TierEmblem tier={b.tier} size={22} />
               <Icon
                 name={SPORT_ICON[b.sport]}
-                size={14}
+                size={12}
                 className={SPORT_ACCENT[b.sport].text}
               />
               <TierBadge tier={b.tier} />
