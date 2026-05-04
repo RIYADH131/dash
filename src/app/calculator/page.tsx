@@ -27,15 +27,26 @@ import type {
   RunDistance,
   Stroke,
   SwimDistance,
+  Tier,
 } from "@/lib/types";
 import clsx from "clsx";
 
 type Mode = "bodybuilding" | "swimming" | "running" | "exercise";
 
+type ExerciseSnapshot = {
+  exercise: ExerciseId;
+  weightKg: number;
+  reps: number;
+  bodyweightKg: number;
+  oneRepMax: number;
+  score: number;
+  tier: Tier;
+};
+
 export default function CalculatorPage() {
   const [mode, setMode] = useState<Mode>("bodybuilding");
   const [result, setResult] = useState<RankResult | null>(null);
-  const [oneRm, setOneRm] = useState<number | null>(null);
+  const [exSnap, setExSnap] = useState<ExerciseSnapshot | null>(null);
   const [savedFlash, setSavedFlash] = useState(false);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { save: saveExerciseRank, ranks: savedRanks } = useExerciseRanks();
@@ -71,19 +82,15 @@ export default function CalculatorPage() {
   }, []);
 
   function saveCurrentExerciseRank() {
-    if (mode !== "exercise" || !result || oneRm == null) return;
-    const w = Number(exWeight) || 0;
-    const r = Number(exReps) || 0;
-    const bwn = Number(exBw) || 0;
-    if (w <= 0 || r <= 0 || bwn <= 0) return;
+    if (mode !== "exercise" || !exSnap) return;
     saveExerciseRank({
-      exercise: exId,
-      weightKg: w,
-      reps: r,
-      bodyweightKg: bwn,
-      oneRepMax: oneRm,
-      score: result.score,
-      tier: result.tier,
+      exercise: exSnap.exercise,
+      weightKg: exSnap.weightKg,
+      reps: exSnap.reps,
+      bodyweightKg: exSnap.bodyweightKg,
+      oneRepMax: exSnap.oneRepMax,
+      score: exSnap.score,
+      tier: exSnap.tier,
     });
     setSavedFlash(true);
     if (flashTimer.current) clearTimeout(flashTimer.current);
@@ -92,16 +99,17 @@ export default function CalculatorPage() {
 
   const alreadySavedSameInputs =
     mode === "exercise" &&
+    exSnap != null &&
     savedRanks.some(
       (r) =>
-        r.exercise === exId &&
-        r.weightKg === (Number(exWeight) || 0) &&
-        r.reps === (Number(exReps) || 0) &&
-        r.bodyweightKg === (Number(exBw) || 0),
+        r.exercise === exSnap.exercise &&
+        r.weightKg === exSnap.weightKg &&
+        r.reps === exSnap.reps &&
+        r.bodyweightKg === exSnap.bodyweightKg,
     );
 
   function calculate() {
-    setOneRm(null);
+    setExSnap(null);
     if (mode === "bodybuilding") {
       const r = bodybuildingScore({
         benchKg: Number(bench) || 0,
@@ -131,7 +139,15 @@ export default function CalculatorPage() {
         bodyweightKg: bwn,
       });
       setResult(out);
-      setOneRm(out.oneRepMax);
+      setExSnap({
+        exercise: exId,
+        weightKg: w,
+        reps: r,
+        bodyweightKg: bwn,
+        oneRepMax: out.oneRepMax,
+        score: out.score,
+        tier: out.tier,
+      });
     }
   }
 
@@ -159,7 +175,7 @@ export default function CalculatorPage() {
         onChange={(v) => {
           setMode(v);
           setResult(null);
-          setOneRm(null);
+          setExSnap(null);
         }}
       />
 
@@ -452,14 +468,14 @@ export default function CalculatorPage() {
             </p>
           </div>
 
-          {oneRm != null && (
+          {exSnap != null && (
             <div className="w-full grid grid-cols-2 gap-3 mt-1">
               <div className="bg-navy rounded-xl border border-white/5 px-4 py-3">
                 <p className="text-[10px] uppercase tracking-widest text-ink-muted font-semibold">
                   Est. 1RM
                 </p>
                 <p className="font-mono text-lg text-ink mt-1">
-                  {oneRm.toFixed(1)} kg
+                  {exSnap.oneRepMax.toFixed(1)} kg
                 </p>
               </div>
               <div className="bg-navy rounded-xl border border-white/5 px-4 py-3">
@@ -512,7 +528,7 @@ export default function CalculatorPage() {
             </div>
           )}
 
-          {mode === "exercise" && oneRm != null && (
+          {mode === "exercise" && exSnap != null && (
             <button
               type="button"
               onClick={saveCurrentExerciseRank}
@@ -535,7 +551,7 @@ export default function CalculatorPage() {
                 ? "Saved to profile"
                 : alreadySavedSameInputs
                   ? "Already saved"
-                  : `Save ${EXERCISE_LABEL[exId]} rank`}
+                  : `Save ${EXERCISE_LABEL[exSnap.exercise]} rank`}
             </button>
           )}
         </section>
