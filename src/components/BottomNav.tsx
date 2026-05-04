@@ -10,7 +10,7 @@ const TABS: {
   label: string;
 }[] = [
   { href: "/", icon: "home", label: "Home" },
-  { href: "/leaderboard", icon: "leaderboard", label: "Ranks" },
+  { href: "/leaderboard", icon: "leaderboard", label: "Leaderboard" },
   { href: "/challenge", icon: "bolt", label: "Drops" },
   { href: "/calculator", icon: "calculate", label: "Rank" },
   { href: "/coach", icon: "psychology", label: "Coach" },
