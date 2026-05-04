@@ -157,8 +157,8 @@ export default function MacrosPage() {
             </p>
           </div>
           <RemainingPill
-            label="Remaining"
-            value={`${Math.max(0, Math.round(goals.cal - totals.cal))} cal`}
+            label={totals.cal > goals.cal ? "Over" : "Remaining"}
+            value={`${Math.round(Math.abs(goals.cal - totals.cal))} cal`}
             over={totals.cal > goals.cal}
           />
         </div>
