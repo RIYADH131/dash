@@ -24,7 +24,7 @@ export default function TopBar() {
             <Icon name="notifications" />
           </button>
           <Link
-            href="/profile"
+            href="/profile.html"
             aria-label="Profile"
             className="w-10 h-10 grid place-items-center rounded-xl bg-surface text-ink active:scale-95 transition-all duration-200 font-display font-bold text-sm"
           >

@@ -6,14 +6,15 @@ import Icon from "./Icon";
 
 const TABS: {
   href: string;
+  routeBase: string;
   icon: string;
   label: string;
 }[] = [
-  { href: "/", icon: "home", label: "Home" },
-  { href: "/leaderboard", icon: "leaderboard", label: "Leaderboard" },
-  { href: "/challenge", icon: "bolt", label: "Drops" },
-  { href: "/calculator", icon: "calculate", label: "Rank" },
-  { href: "/coach", icon: "psychology", label: "Coach" },
+  { href: "/", routeBase: "/", icon: "home", label: "Home" },
+  { href: "/leaderboard.html", routeBase: "/leaderboard", icon: "leaderboard", label: "Leaderboard" },
+  { href: "/challenge.html", routeBase: "/challenge", icon: "bolt", label: "Drops" },
+  { href: "/calculator.html", routeBase: "/calculator", icon: "calculate", label: "Rank" },
+  { href: "/coach.html", routeBase: "/coach", icon: "psychology", label: "Coach" },
 ];
 
 export default function BottomNav() {
@@ -26,9 +27,9 @@ export default function BottomNav() {
       <ul className="max-w-md mx-auto h-full flex items-stretch justify-around px-2 pt-2 pb-3">
         {TABS.map((tab) => {
           const active =
-            tab.href === "/"
+            tab.routeBase === "/"
               ? pathname === "/"
-              : pathname.startsWith(tab.href);
+              : pathname.startsWith(tab.routeBase);
           return (
             <li key={tab.href} className="flex-1">
               <Link
