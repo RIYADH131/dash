@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/Icon";
 import InputField from "@/components/InputField";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -20,6 +20,7 @@ import {
   nextTier,
 } from "@/lib/tiers";
 import TierEmblem from "@/components/TierEmblem";
+import { useExerciseRanks } from "@/lib/exerciseRanks";
 import type {
   ExerciseId,
   RankResult,
@@ -35,6 +36,9 @@ export default function CalculatorPage() {
   const [mode, setMode] = useState<Mode>("bodybuilding");
   const [result, setResult] = useState<RankResult | null>(null);
   const [oneRm, setOneRm] = useState<number | null>(null);
+  const [savedFlash, setSavedFlash] = useState(false);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { save: saveExerciseRank, ranks: savedRanks } = useExerciseRanks();
 
   // bodybuilding
   const [bench, setBench] = useState<string>("");
@@ -59,6 +63,42 @@ export default function CalculatorPage() {
   const [exWeight, setExWeight] = useState<string>("");
   const [exReps, setExReps] = useState<string>("");
   const [exBw, setExBw] = useState<string>("");
+
+  useEffect(() => {
+    return () => {
+      if (flashTimer.current) clearTimeout(flashTimer.current);
+    };
+  }, []);
+
+  function saveCurrentExerciseRank() {
+    if (mode !== "exercise" || !result || oneRm == null) return;
+    const w = Number(exWeight) || 0;
+    const r = Number(exReps) || 0;
+    const bwn = Number(exBw) || 0;
+    if (w <= 0 || r <= 0 || bwn <= 0) return;
+    saveExerciseRank({
+      exercise: exId,
+      weightKg: w,
+      reps: r,
+      bodyweightKg: bwn,
+      oneRepMax: oneRm,
+      score: result.score,
+      tier: result.tier,
+    });
+    setSavedFlash(true);
+    if (flashTimer.current) clearTimeout(flashTimer.current);
+    flashTimer.current = setTimeout(() => setSavedFlash(false), 1800);
+  }
+
+  const alreadySavedSameInputs =
+    mode === "exercise" &&
+    savedRanks.some(
+      (r) =>
+        r.exercise === exId &&
+        r.weightKg === (Number(exWeight) || 0) &&
+        r.reps === (Number(exReps) || 0) &&
+        r.bodyweightKg === (Number(exBw) || 0),
+    );
 
   function calculate() {
     setOneRm(null);
@@ -470,6 +510,33 @@ export default function CalculatorPage() {
                 <span className="text-electric font-semibold">{result.toNext}</span>
               </p>
             </div>
+          )}
+
+          {mode === "exercise" && oneRm != null && (
+            <button
+              type="button"
+              onClick={saveCurrentExerciseRank}
+              disabled={savedFlash}
+              className={clsx(
+                "w-full mt-1 rounded-xl py-3 px-4 flex items-center justify-center gap-2 border transition-all duration-200 active:scale-[0.98] font-display font-extrabold uppercase tracking-widest text-[12px]",
+                savedFlash
+                  ? "bg-electric/15 border-electric/40 text-electric"
+                  : alreadySavedSameInputs
+                    ? "bg-surface border-white/10 text-ink-muted"
+                    : "bg-electric/10 border-electric/40 text-electric hover:bg-electric/15",
+              )}
+            >
+              <Icon
+                name={savedFlash ? "check_circle" : alreadySavedSameInputs ? "bookmark_added" : "bookmark_add"}
+                size={18}
+                filled={savedFlash || alreadySavedSameInputs}
+              />
+              {savedFlash
+                ? "Saved to profile"
+                : alreadySavedSameInputs
+                  ? "Already saved"
+                  : `Save ${EXERCISE_LABEL[exId]} rank`}
+            </button>
           )}
         </section>
       )}

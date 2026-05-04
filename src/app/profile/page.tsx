@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import Card from "@/components/Card";
 import Icon from "@/components/Icon";
@@ -9,6 +10,8 @@ import SectionTitle from "@/components/SectionTitle";
 import SportBadge from "@/components/SportBadge";
 import TierBadge from "@/components/TierBadge";
 import TierEmblem from "@/components/TierEmblem";
+import { useExerciseRanks } from "@/lib/exerciseRanks";
+import { EXERCISE_LABEL } from "@/lib/rank";
 import { MOCK_USER, PROGRAMS } from "@/lib/mockData";
 import {
   SPORT_ACCENT,
@@ -61,6 +64,8 @@ const SPORT_BREAKDOWN: {
 
 export default function ProfilePage() {
   const [open, setOpen] = useState<Sport | null>("bodybuilding");
+  const { ranks: exerciseRanks, remove: removeExerciseRank, hydrated } =
+    useExerciseRanks();
 
   return (
     <div className="flex flex-col gap-6 pt-6 pb-16">
@@ -178,6 +183,77 @@ export default function ProfilePage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* EXERCISE RANKS (saved per-lift) */}
+      <section>
+        <SectionTitle
+          action={
+            <Link
+              href="/calculator"
+              className="text-electric text-xs font-display font-semibold uppercase tracking-widest"
+            >
+              Add
+            </Link>
+          }
+        >
+          Exercise Ranks
+        </SectionTitle>
+        <div className="mt-3 flex flex-col gap-2">
+          {!hydrated ? (
+            <div className="bg-surface rounded-2xl border border-white/10 px-4 py-6 text-center text-ink-muted text-xs">
+              Loading…
+            </div>
+          ) : exerciseRanks.length === 0 ? (
+            <Link
+              href="/calculator"
+              className="bg-surface rounded-2xl border border-white/10 px-4 py-5 flex items-center gap-3 active:scale-[0.99] transition-all duration-200"
+            >
+              <div className="w-10 h-10 rounded-full bg-electric/10 grid place-items-center text-electric shrink-0">
+                <Icon name="bookmark_add" size={20} />
+              </div>
+              <div className="flex-1">
+                <p className="font-display font-semibold text-sm text-ink">
+                  No exercise ranks yet
+                </p>
+                <p className="text-xs text-ink-muted leading-snug mt-0.5">
+                  Open the Rank Calculator → Exercise to save your first lift.
+                </p>
+              </div>
+              <Icon name="chevron_right" size={20} className="text-ink-muted shrink-0" />
+            </Link>
+          ) : (
+            exerciseRanks.map((r) => (
+              <div
+                key={r.exercise}
+                className="bg-surface rounded-2xl border border-white/10 px-4 py-3 flex items-center gap-3"
+              >
+                <TierEmblem tier={r.tier} size={36} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-display font-bold text-sm text-ink truncate">
+                      {EXERCISE_LABEL[r.exercise]}
+                    </p>
+                    <TierBadge tier={r.tier} />
+                  </div>
+                  <p className="text-[11px] text-ink-muted mt-0.5 font-mono">
+                    {r.oneRepMax.toFixed(1)} kg 1RM ·{" "}
+                    {r.weightKg}×{r.reps} @ {r.bodyweightKg} kg ·{" "}
+                    <span className="text-electric">{r.score}/1000</span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label={`Remove ${EXERCISE_LABEL[r.exercise]} rank`}
+                  onClick={() => removeExerciseRank(r.exercise)}
+                  className="w-8 h-8 rounded-lg grid place-items-center text-ink-muted hover:text-ink active:scale-90 transition-all duration-200 shrink-0"
+                >
+                  <Icon name="close" size={18} />
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </section>
 
