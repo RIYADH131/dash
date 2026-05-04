@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/Icon";
 import InputField from "@/components/InputField";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -20,21 +20,36 @@ import {
   nextTier,
 } from "@/lib/tiers";
 import TierEmblem from "@/components/TierEmblem";
+import { useExerciseRanks } from "@/lib/exerciseRanks";
 import type {
   ExerciseId,
   RankResult,
   RunDistance,
   Stroke,
   SwimDistance,
+  Tier,
 } from "@/lib/types";
 import clsx from "clsx";
 
 type Mode = "bodybuilding" | "swimming" | "running" | "exercise";
 
+type ExerciseSnapshot = {
+  exercise: ExerciseId;
+  weightKg: number;
+  reps: number;
+  bodyweightKg: number;
+  oneRepMax: number;
+  score: number;
+  tier: Tier;
+};
+
 export default function CalculatorPage() {
   const [mode, setMode] = useState<Mode>("bodybuilding");
   const [result, setResult] = useState<RankResult | null>(null);
-  const [oneRm, setOneRm] = useState<number | null>(null);
+  const [exSnap, setExSnap] = useState<ExerciseSnapshot | null>(null);
+  const [savedFlash, setSavedFlash] = useState(false);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { save: saveExerciseRank, ranks: savedRanks } = useExerciseRanks();
 
   // bodybuilding
   const [bench, setBench] = useState<string>("");
@@ -60,8 +75,41 @@ export default function CalculatorPage() {
   const [exReps, setExReps] = useState<string>("");
   const [exBw, setExBw] = useState<string>("");
 
+  useEffect(() => {
+    return () => {
+      if (flashTimer.current) clearTimeout(flashTimer.current);
+    };
+  }, []);
+
+  function saveCurrentExerciseRank() {
+    if (mode !== "exercise" || !exSnap) return;
+    saveExerciseRank({
+      exercise: exSnap.exercise,
+      weightKg: exSnap.weightKg,
+      reps: exSnap.reps,
+      bodyweightKg: exSnap.bodyweightKg,
+      oneRepMax: exSnap.oneRepMax,
+      score: exSnap.score,
+      tier: exSnap.tier,
+    });
+    setSavedFlash(true);
+    if (flashTimer.current) clearTimeout(flashTimer.current);
+    flashTimer.current = setTimeout(() => setSavedFlash(false), 1800);
+  }
+
+  const alreadySavedSameInputs =
+    mode === "exercise" &&
+    exSnap != null &&
+    savedRanks.some(
+      (r) =>
+        r.exercise === exSnap.exercise &&
+        r.weightKg === exSnap.weightKg &&
+        r.reps === exSnap.reps &&
+        r.bodyweightKg === exSnap.bodyweightKg,
+    );
+
   function calculate() {
-    setOneRm(null);
+    setExSnap(null);
     if (mode === "bodybuilding") {
       const r = bodybuildingScore({
         benchKg: Number(bench) || 0,
@@ -91,7 +139,15 @@ export default function CalculatorPage() {
         bodyweightKg: bwn,
       });
       setResult(out);
-      setOneRm(out.oneRepMax);
+      setExSnap({
+        exercise: exId,
+        weightKg: w,
+        reps: r,
+        bodyweightKg: bwn,
+        oneRepMax: out.oneRepMax,
+        score: out.score,
+        tier: out.tier,
+      });
     }
   }
 
@@ -119,7 +175,7 @@ export default function CalculatorPage() {
         onChange={(v) => {
           setMode(v);
           setResult(null);
-          setOneRm(null);
+          setExSnap(null);
         }}
       />
 
@@ -412,14 +468,14 @@ export default function CalculatorPage() {
             </p>
           </div>
 
-          {oneRm != null && (
+          {exSnap != null && (
             <div className="w-full grid grid-cols-2 gap-3 mt-1">
               <div className="bg-navy rounded-xl border border-white/5 px-4 py-3">
                 <p className="text-[10px] uppercase tracking-widest text-ink-muted font-semibold">
                   Est. 1RM
                 </p>
                 <p className="font-mono text-lg text-ink mt-1">
-                  {oneRm.toFixed(1)} kg
+                  {exSnap.oneRepMax.toFixed(1)} kg
                 </p>
               </div>
               <div className="bg-navy rounded-xl border border-white/5 px-4 py-3">
@@ -470,6 +526,33 @@ export default function CalculatorPage() {
                 <span className="text-electric font-semibold">{result.toNext}</span>
               </p>
             </div>
+          )}
+
+          {mode === "exercise" && exSnap != null && (
+            <button
+              type="button"
+              onClick={saveCurrentExerciseRank}
+              disabled={savedFlash}
+              className={clsx(
+                "w-full mt-1 rounded-xl py-3 px-4 flex items-center justify-center gap-2 border transition-all duration-200 active:scale-[0.98] font-display font-extrabold uppercase tracking-widest text-[12px]",
+                savedFlash
+                  ? "bg-electric/15 border-electric/40 text-electric"
+                  : alreadySavedSameInputs
+                    ? "bg-surface border-white/10 text-ink-muted"
+                    : "bg-electric/10 border-electric/40 text-electric hover:bg-electric/15",
+              )}
+            >
+              <Icon
+                name={savedFlash ? "check_circle" : alreadySavedSameInputs ? "bookmark_added" : "bookmark_add"}
+                size={18}
+                filled={savedFlash || alreadySavedSameInputs}
+              />
+              {savedFlash
+                ? "Saved to profile"
+                : alreadySavedSameInputs
+                  ? "Already saved"
+                  : `Save ${EXERCISE_LABEL[exSnap.exercise]} rank`}
+            </button>
           )}
         </section>
       )}
